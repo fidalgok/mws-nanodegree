@@ -153,8 +153,8 @@ createRestaurantHTML = restaurant => {
   } else {
     image.src = src;
   }
-
-  li.append(image);
+  picture.appendChild(image);
+  li.append(picture);
 
   const name = document.createElement('h1');
   name.innerHTML = restaurant.name;

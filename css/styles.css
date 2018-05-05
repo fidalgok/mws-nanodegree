@@ -164,20 +164,23 @@ nav h1 a {
   background-color: #f3f3f3;
   list-style: outside none none;
   margin: 0;
-  padding: 3rem 1.5rem 6rem;
+  padding: 3rem 1rem 6rem;
   text-align: center;
-  display: flex;
-  flex-wrap: wrap;
+  /* display: flex;
+  flex-wrap: wrap; */
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-gap: 1.5rem;
 }
 #restaurants-list li {
   background-color: #fff;
   border: 0.2rem solid #ccc;
   font-family: Arial, sans-serif;
-  margin: 1.5rem 0;
+  
   min-height: 38rem;
-  padding: 0 3rem 2.5rem;
+  padding: 0 0 2.5rem;
   text-align: left;
-  flex: 1 0 100%;
+  
 }
 #restaurants-list .restaurant-img {
   background-color: #ccc;
@@ -186,6 +189,9 @@ nav h1 a {
   max-width: 100%;
   min-height: 25rem;
   min-width: 100%;
+}
+.restaurants-list--details{
+  padding:0 1.5rem;
 }
 #restaurants-list li h1 {
   color: #f18200;

@@ -176,6 +176,9 @@ createRestaurantHTML = restaurant => {
 
     })
     image.src = src[0];
+    image.alt = `${restaurant.name} in ${restaurant.neighborhood} 
+     serves ${restaurant.cuisine_type} cuisine.
+    `;
     picture.appendChild(source);
     picture.appendChild(mdSource);
     picture.appendChild(image);
@@ -184,24 +187,25 @@ createRestaurantHTML = restaurant => {
   }
 
   li.append(picture);
-
+  const detailsContainer = document.createElement('div');
+  detailsContainer.classList.add('restaurants-list--details');
   const name = document.createElement('h1');
   name.innerHTML = restaurant.name;
-  li.append(name);
+  detailsContainer.append(name);
 
   const neighborhood = document.createElement('p');
   neighborhood.innerHTML = restaurant.neighborhood;
-  li.append(neighborhood);
+  detailsContainer.append(neighborhood);
 
   const address = document.createElement('p');
   address.innerHTML = restaurant.address;
-  li.append(address);
+  detailsContainer.append(address);
 
   const more = document.createElement('a');
   more.innerHTML = 'View Details';
   more.href = DBHelper.urlForRestaurant(restaurant);
-  li.append(more);
-
+  detailsContainer.append(more);
+  li.append(detailsContainer)
   return li;
 };
 

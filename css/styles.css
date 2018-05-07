@@ -63,11 +63,28 @@ img,
 embed,
 object,
 video {
-  max-width: 100%;
+  width: 100%;
 }
 #maincontent {
   background-color: #f3f3f3;
 }
+@media screen and (min-width: 600px) {
+  .inside #maincontent {
+    display: grid;
+    grid-template-columns: 3fr 2fr;
+    grid-template-rows: auto auto;
+  }
+
+  #map-container {
+    grid-column: 2;
+  }
+
+  #restaurant-container {
+    grid-row: 1;
+    grid-column: 1;
+  }
+}
+
 #footer {
   background-color: #444;
   color: #aaa;
@@ -138,6 +155,8 @@ nav h1 a {
   width: 100%;
   background-color: #3397db;
   align-items: center;
+  display: sticky;
+  top: 0;
 }
 .filter-options h2 {
   color: white;
@@ -242,6 +261,13 @@ nav h1 a {
   top: 8rem;
   width: 50%; */
 }
+
+@media screen and (min-width: 600px) {
+  .inside #map-container {
+    height: auto;
+    margin: 3rem 0;
+  }
+}
 .inside #map {
   background-color: #ccc;
   height: 100%;
@@ -305,12 +331,44 @@ nav h1 a {
   list-style-type: none;
   margin: 0 0 3rem;
   overflow: hidden;
-  padding: 0 1.5rem 1.5rem;
+  /* padding: 0 1.5rem 1.5rem; */
   position: relative;
   /* width: 85%; */
+  border-radius: 20px 0 20px 0;
 }
+
 #reviews-list li p {
-  margin: 0 0 1rem;
+  margin: 1.5rem 1rem 1rem;
+}
+.review__header {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  padding: 1rem 0;
+  margin-bottom: 2rem;
+  align-items: center;
+}
+
+.review__rating {
+  display: inline;
+  padding: 1rem;
+  border-radius: 0.5rem;
+}
+.review--black {
+  background-color: #333;
+  color: #eee;
+}
+
+.review--orange {
+  border-color: #ff9036;
+  color: white;
+  background-color: #ff9036;
+}
+.review__header p:nth-child(1) {
+  font-size: 2rem;
+}
+.review__header p:last-child {
+  opacity: 0.7;
 }
 #restaurant-hours td {
   color: #666;

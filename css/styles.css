@@ -67,7 +67,6 @@ video {
 }
 #maincontent {
   background-color: #f3f3f3;
-  min-height: 100%;
 }
 #footer {
   background-color: #444;
@@ -96,12 +95,13 @@ nav h1 a {
   text-transform: uppercase;
 }
 #breadcrumb {
-  padding: 1rem 4rem 1.6rem;
+  padding: 1rem 2rem 1.6rem;
   list-style: none;
   background-color: #eee;
   font-size: 1.7rem;
   margin: 0;
-  width: calc(50% - 8rem);
+  /* width: calc(50% - 8rem); */
+  flex: 1;
 }
 
 /* Display list items side by side */
@@ -176,11 +176,10 @@ nav h1 a {
   background-color: #fff;
   border: 0.2rem solid #ccc;
   font-family: Arial, sans-serif;
-  
+
   min-height: 38rem;
   padding: 0 0 2.5rem;
   text-align: left;
-  
 }
 #restaurants-list .restaurant-img {
   background-color: #ccc;
@@ -190,8 +189,8 @@ nav h1 a {
   min-height: 25rem;
   min-width: 100%;
 }
-.restaurants-list--details{
-  padding:0 1.5rem;
+.restaurants-list--details {
+  padding: 0 1.5rem;
 }
 #restaurants-list li h1 {
   color: #f18200;
@@ -221,19 +220,27 @@ nav h1 a {
 }
 
 /* ====================== Restaurant Details ====================== */
-.inside header {
+
+.wrapper {
+  display: grid;
+  grid-template-rows: minmax(14rem, auto) 1fr auto;
+}
+.header--inner {
   position: fixed;
+  min-height: 14rem;
   top: 0;
   width: 100%;
   z-index: 1000;
+  display: flex;
+  flex-direction: column;
 }
 .inside #map-container {
   background: blue none repeat scroll 0 0;
-  height: 87%;
-  position: fixed;
+  height: 20rem;
+  /*position: fixed;
   right: 0;
   top: 8rem;
-  width: 50%;
+  width: 50%; */
 }
 .inside #map {
   background-color: #ccc;
@@ -241,9 +248,6 @@ nav h1 a {
   width: 100%;
 }
 .inside #footer {
-  bottom: 0;
-  position: absolute;
-  width: 50%;
 }
 #restaurant-name {
   color: #f18200;
@@ -256,7 +260,7 @@ nav h1 a {
   line-height: 1.1;
 }
 #restaurant-img {
-  width: 90%;
+  width: 100%;
 }
 #restaurant-address {
   font-size: 1.4rem;
@@ -272,17 +276,16 @@ nav h1 a {
   padding: 0.2rem 0;
   text-align: center;
   text-transform: uppercase;
-  width: 90%;
+  /* width: 90%; */
 }
 #restaurant-container,
 #reviews-container {
   border-bottom: 0.1rem solid #d9d9d9;
   border-top: 0.1rem solid #fff;
-  padding: 14rem 4rem 3rem;
-  width: 50%;
+  padding: 3rem 2rem;
 }
 #reviews-container {
-  padding: 3rem 4rem 8re;
+  padding: 3rem 2rem 4rem;
 }
 #reviews-container h2 {
   color: #f58500;
@@ -302,13 +305,22 @@ nav h1 a {
   list-style-type: none;
   margin: 0 0 3rem;
   overflow: hidden;
-  padding: 0 2rem 2rem;
+  padding: 0 1.5rem 1.5rem;
   position: relative;
-  width: 85%;
+  /* width: 85%; */
 }
 #reviews-list li p {
   margin: 0 0 1rem;
 }
 #restaurant-hours td {
   color: #666;
+}
+
+/* Reset all widths back to auto, 
+and remove the margin because we have grid gaps. */
+@supports (display: grid) {
+  .wrapper > * {
+    width: auto;
+    margin: 0;
+  }
 }

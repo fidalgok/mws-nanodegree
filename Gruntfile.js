@@ -17,15 +17,11 @@ module.exports = function(grunt) {
               quality: 60
             },
             {
-              width: 960,
+              width: 800,
               suffix: '-md-1x',
               quality: 60
             },
-            {
-              width: 1920,
-              suffix: '-md-2x',
-              quality: 60
-            }
+            
           ]
         },
         files: [

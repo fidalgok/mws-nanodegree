@@ -146,33 +146,65 @@ createRestaurantHTML = restaurant => {
   const image = document.createElement('img');
   const picture = document.createElement('picture');
 
+
   image.className = 'restaurant-img';
   const src = DBHelper.imageUrlForRestaurant(restaurant);
   if (Array.isArray(src)) {
+    //we have an array of photos, append them to the picture element
+    const source = document.createElement('source');
+    const mdSource = document.createElement('source');
+    src.forEach(img => {
+      //expecting image to come in as 1-widthinpx-sm|md-1x|2x.jpg
+      let width = img.split('-')[2];
+      let density = img.split('-')[3].slice(0, 2);
+      //if the width is sm set max width, otherwise set min width
+      if (width === 'sm') {
+        source.setAttribute('media', '(max-width: 767px)');
+        if (!source.getAttribute('srcset')) {
+          source.setAttribute('srcset', `${img} ${density}`);
+        } else {
+          //srcset exists, so append image path
+          let srcset = source.getAttribute('srcset');
+          source.setAttribute('srcset', srcset += `, ${img} ${density}`);
+        }
+      } else {
+        mdSource.setAttribute('media', '(min-width:768px)');
+        mdSource.setAttribute('srcset', img);
+      }
+
+
+
+    })
     image.src = src[0];
+    image.alt = `${restaurant.name} in ${restaurant.neighborhood} 
+     serves ${restaurant.cuisine_type} cuisine.
+    `;
+    picture.appendChild(source);
+    picture.appendChild(mdSource);
+    picture.appendChild(image);
   } else {
     image.src = src;
   }
-  picture.appendChild(image);
   li.append(picture);
-
+  const detailsContainer = document.createElement('div');
+  detailsContainer.classList.add('restaurants-list--details');
   const name = document.createElement('h1');
   name.innerHTML = restaurant.name;
-  li.append(name);
+  detailsContainer.append(name);
 
   const neighborhood = document.createElement('p');
   neighborhood.innerHTML = restaurant.neighborhood;
-  li.append(neighborhood);
+  detailsContainer.append(neighborhood);
 
   const address = document.createElement('p');
   address.innerHTML = restaurant.address;
-  li.append(address);
+  detailsContainer.append(address);
 
   const more = document.createElement('a');
   more.innerHTML = 'View Details';
   more.href = DBHelper.urlForRestaurant(restaurant);
-  li.append(more);
-
+  detailsContainer.append(more);
+  li.append(detailsContainer)
   return li;
 };
 

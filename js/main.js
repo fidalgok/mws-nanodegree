@@ -146,7 +146,6 @@ createRestaurantHTML = restaurant => {
   const image = document.createElement('img');
   const picture = document.createElement('picture');
 
-
   image.className = 'restaurant-img';
   const src = DBHelper.imageUrlForRestaurant(restaurant);
   if (Array.isArray(src)) {
@@ -165,16 +164,13 @@ createRestaurantHTML = restaurant => {
         } else {
           //srcset exists, so append image path
           let srcset = source.getAttribute('srcset');
-          source.setAttribute('srcset', srcset += `, ${img} ${density}`);
+          source.setAttribute('srcset', (srcset += `, ${img} ${density}`));
         }
       } else {
         mdSource.setAttribute('media', '(min-width:768px)');
         mdSource.setAttribute('srcset', img);
       }
-
-
-
-    })
+    });
     image.src = src[0];
     image.alt = `${restaurant.name} in ${restaurant.neighborhood} 
      serves ${restaurant.cuisine_type} cuisine.
@@ -204,7 +200,7 @@ createRestaurantHTML = restaurant => {
   more.innerHTML = 'View Details';
   more.href = DBHelper.urlForRestaurant(restaurant);
   detailsContainer.append(more);
-  li.append(detailsContainer)
+  li.append(detailsContainer);
   return li;
 };
 
@@ -221,3 +217,30 @@ addMarkersToMap = (restaurants = self.restaurants) => {
     self.markers.push(marker);
   });
 };
+
+/**
+ * Register Service Worker
+ */
+
+if ('navigator' in window) {
+  self.addEventListener('load', () => {
+    navigator.serviceWorker
+      .register('../serviceworker.js')
+      .then(registration => {
+        //success
+        console.log(
+          `Successfully registered service worker with scope: ${
+            registration.scope
+          }`
+        );
+      })
+      .catch(err => {
+        //something went wrong
+        console.log(`Service worker registration failed with: ${err}`);
+      });
+  });
+} else {
+  /**
+   * Service workers aren't supported, do nothing
+   */
+}

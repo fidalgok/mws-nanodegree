@@ -85,6 +85,8 @@ video {
   }
 }
 
+
+
 #footer {
   background-color: #444;
   color: #aaa;
@@ -372,6 +374,24 @@ nav h1 a {
 }
 #restaurant-hours td {
   color: #666;
+}
+
+@media screen and (min-width: 1050px){
+  #restaurant-container {
+    display:grid;
+    grid-template-columns: 50% 1fr;
+    grid-gap: 20px;
+  }
+
+  #restaurant-name {
+    margin: 0;
+    margin-bottom: 2rem;
+  }
+}
+
+@media screen and (min-width: 1350px){
+  /*TODO*/
+  /* set max width for container here */
 }
 
 /* Reset all widths back to auto, 

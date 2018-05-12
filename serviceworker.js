@@ -1,5 +1,5 @@
 console.log('from service worker: successfully registered');
-const cacheVersion = 'restaurant-reviews-v4-';
+const cacheVersion = 'restaurant-reviews-v3-';
 const urlsToCache = [
   '/',
   '/js/main.js',

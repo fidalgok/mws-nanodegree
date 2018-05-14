@@ -148,6 +148,7 @@ createRestaurantHTML = restaurant => {
 
   image.className = 'restaurant-img';
   const src = DBHelper.imageUrlForRestaurant(restaurant);
+  console.log(src);
   if (Array.isArray(src)) {
     //we have an array of photos, append them to the picture element
     const source = document.createElement('source');
@@ -180,6 +181,7 @@ createRestaurantHTML = restaurant => {
     picture.appendChild(image);
   } else {
     image.src = src;
+    picture.appendChild(image);
   }
   li.append(picture);
   const detailsContainer = document.createElement('div');

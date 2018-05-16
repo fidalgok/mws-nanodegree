@@ -1,9 +1,9 @@
 console.log('from service worker: successfully registered');
-const cacheVersion = 'restaurant-reviews-v3-';
+const cacheVersion = 'restaurant-reviews-v4-';
 const urlsToCache = [
   '/',
-  '/js/main.js',
-  '/js/restaurant_info.js',
+  '/dist/main.js',
+  '/dist/restaurant_info.js',
   '/js/dbhelper.js',
   '/css/styles.css',
   '/restaurant.html'
@@ -55,7 +55,13 @@ self.addEventListener('fetch', event => {
         if (response) {
           return response;
         }
-        return fetch(event.request);
+        return fetch(event.request).then(response => {
+          //let's add images to cache if they come from
+          //the same origin. code pulled from mdn docs
+          //learning how to use service worker
+          //
+          return response;
+        });
       })
       .catch(err => console.log(`error matching cache: ${err}`))
   );

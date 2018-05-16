@@ -1,6 +1,9 @@
 /**
  * Common database helper functions.
  */
+
+// import idb from 'idb';
+
 class DBHelper {
   /**
    * Database URL.
@@ -22,6 +25,18 @@ class DBHelper {
         // Got a success response from server!
         const json = JSON.parse(xhr.responseText);
         const restaurants = json;
+        //add restaurants returned to the dbstore
+        // _dbPromise
+        //   .then(db => {
+        //     if (!db) return;
+        //     const tx = db.transaction('restaurants', 'readwrite');
+        //     const restaurantStore = tx.objectStore('restaurants');
+        //     restaurants.forEach(restaurant => {
+        //       restaurantStore.put(restaurant);
+        //     });
+        //     return tx.complete;
+        //   })
+        //   .then(() => console.log('restuarants added to db'));
         callback(null, restaurants);
       } else {
         // Oops!. Got an error from server.
@@ -187,3 +202,5 @@ class DBHelper {
     return marker;
   }
 }
+
+export default DBHelper;

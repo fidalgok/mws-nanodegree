@@ -1,5 +1,6 @@
-console.log('from service worker: successfully registered');
-const cacheVersion = 'restaurant-reviews-v4-';
+//console.log('from service worker: successfully registered');
+const cacheVersion = 'restaurant-reviews-v1-';
+const restaurantImagesCache = 'restaurant-images';
 const urlsToCache = [
   '/',
   '/dist/main.js',
@@ -8,7 +9,7 @@ const urlsToCache = [
   '/css/styles.css',
   '/restaurant.html'
 ];
-const cacheWhitelist = [`${cacheVersion}skeleton`];
+const cacheWhitelist = [`${cacheVersion}skeleton`, restaurantImagesCache];
 
 self.addEventListener('install', event => {
   //open a cache
@@ -33,8 +34,6 @@ self.addEventListener('install', event => {
     //     console.log(`caching failed with: ${err}`);
     //   })
   );
-  //cache static files
-  //confirm whether files are cached or not
 });
 
 self.addEventListener('fetch', event => {
@@ -42,7 +41,21 @@ self.addEventListener('fetch', event => {
     //ignore for now
     return;
   }
-
+  var requestUrl = new URL(event.request.url);
+  if (requestUrl.origin === location.origin) {
+    //cache restaurant images
+    if (requestUrl.pathname.startsWith('/images/')) {
+      //requesting images so cache them
+      event.respondWith(serveImages(event.request));
+      return;
+    }
+    if(requestUrl.pathname.startsWith('/restaurant.html')){
+      event.respondWith(caches.match('/restaurant.html').then(response => {
+        if(response) return response;
+        return fetch(event.request).then(response => response);
+      }))
+    }
+  }
   //block the fetch and respond with our cache before going to the network
   event.respondWith(
     //match a cache to the request event to one of the urls we've specified
@@ -56,10 +69,7 @@ self.addEventListener('fetch', event => {
           return response;
         }
         return fetch(event.request).then(response => {
-          //let's add images to cache if they come from
-          //the same origin. code pulled from mdn docs
-          //learning how to use service worker
-          //
+          
           return response;
         });
       })
@@ -83,11 +93,26 @@ self.addEventListener('activate', event => {
               key.startsWith('restaurant-reviews-')
           )
           .map(key => {
-            if (cacheWhitelist.indexOf(key) === -1) {
-              return caches.delete(key);
-            }
+            return caches.delete(key);
           })
       );
     })
   );
 });
+
+function serveImages(request) {
+  //don't care about storing every size
+  //just store the first one that comes back
+  var storageUrl = request.url.replace(/-[-\d\w]+\.jpg/, '');
+  return caches.open(restaurantImagesCache).then(cache => {
+    return cache.match(storageUrl).then(response => {
+      return (
+        response ||
+        fetch(request).then(response => {
+          cache.put(storageUrl, response.clone());
+          return response;
+        })
+      );
+    });
+  });
+}

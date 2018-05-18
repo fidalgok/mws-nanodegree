@@ -1,5 +1,4 @@
 import DBHelper from './dbhelper';
-import idb from 'idb';
 
 let restaurants, neighborhoods, cuisines;
 var map;
@@ -20,7 +19,7 @@ function fetchNeighborhoods() {
   DBHelper.fetchNeighborhoods((error, neighborhoods) => {
     if (error) {
       // Got an error
-      console.error(error);
+      console.log('error getting neighborhoods', error);
     } else {
       self.neighborhoods = neighborhoods;
       fillNeighborhoodsHTML();
@@ -34,6 +33,7 @@ function fetchNeighborhoods() {
 function fillNeighborhoodsHTML(neighborhoods = self.neighborhoods) {
   const select = document.getElementById('neighborhoods-select');
   select.addEventListener('change', updateRestaurants);
+  if (select.querySelectorAll('option').length > 1) return;
   neighborhoods.forEach(neighborhood => {
     const option = document.createElement('option');
     option.innerHTML = neighborhood;
@@ -49,7 +49,7 @@ function fetchCuisines() {
   DBHelper.fetchCuisines((error, cuisines) => {
     if (error) {
       // Got an error!
-      console.error(error);
+      console.error('error getting cuisines', error);
     } else {
       self.cuisines = cuisines;
       fillCuisinesHTML();
@@ -63,6 +63,7 @@ function fetchCuisines() {
 function fillCuisinesHTML(cuisines = self.cuisines) {
   const select = document.getElementById('cuisines-select');
   select.addEventListener('change', updateRestaurants);
+  if (select.querySelectorAll('option').length > 1) return;
   cuisines.forEach(cuisine => {
     const option = document.createElement('option');
     option.innerHTML = cuisine;
@@ -107,7 +108,7 @@ function updateRestaurants() {
     (error, restaurants) => {
       if (error) {
         // Got an error!
-        console.error(error);
+        console.error('error getting all restaurants', error);
       } else {
         resetRestaurants(restaurants);
         fillRestaurantsHTML();
@@ -139,6 +140,7 @@ function resetRestaurants(restaurants) {
  */
 function fillRestaurantsHTML(restaurants = self.restaurants) {
   const ul = document.getElementById('restaurants-list');
+  if (ul.querySelector('li')) return;
   restaurants.forEach(restaurant => {
     ul.append(createRestaurantHTML(restaurant));
   });
@@ -151,46 +153,10 @@ function fillRestaurantsHTML(restaurants = self.restaurants) {
 function createRestaurantHTML(restaurant) {
   const li = document.createElement('li');
 
-  const image = document.createElement('img');
-  const picture = document.createElement('picture');
-
-  image.className = 'restaurant-img';
-  const src = DBHelper.imageUrlForRestaurant(restaurant);
-
-  if (Array.isArray(src)) {
-    //we have an array of photos, append them to the picture element
-    const source = document.createElement('source');
-    const mdSource = document.createElement('source');
-    src.forEach(img => {
-      //expecting image to come in as 1-widthinpx-sm|md-1x|2x.jpg
-      let width = img.split('-')[2];
-      let density = img.split('-')[3].slice(0, 2);
-      //if the width is sm set max width, otherwise set min width
-      if (width === 'sm') {
-        source.setAttribute('media', '(max-width: 767px)');
-        if (!source.getAttribute('srcset')) {
-          source.setAttribute('srcset', `${img} ${density}`);
-        } else {
-          //srcset exists, so append image path
-          let srcset = source.getAttribute('srcset');
-          source.setAttribute('srcset', (srcset += `, ${img} ${density}`));
-        }
-      } else {
-        mdSource.setAttribute('media', '(min-width:768px)');
-        mdSource.setAttribute('srcset', img);
-      }
-    });
-    image.src = src[0];
-    image.alt = `${restaurant.name} in ${restaurant.neighborhood} 
-     serves ${restaurant.cuisine_type} cuisine.
-    `;
-    picture.appendChild(source);
-    picture.appendChild(mdSource);
-    picture.appendChild(image);
-  } else {
-    image.src = src;
-    picture.appendChild(image);
-  }
+  const picture = createResponsiveImageHtml(
+    DBHelper.imageUrlForRestaurant(restaurant),
+    restaurant
+  );
   li.append(picture);
   const detailsContainer = document.createElement('div');
   detailsContainer.classList.add('restaurants-list--details');
@@ -212,6 +178,57 @@ function createRestaurantHTML(restaurant) {
   detailsContainer.append(more);
   li.append(detailsContainer);
   return li;
+}
+
+/**
+ * Create responsive images
+ */
+
+function createResponsiveImageHtml(imgUrl, restaurant) {
+  //getting just the number of the image from the DB
+  //add appropriate sizes to the url and add all responsive
+  //elements to a picture tag
+  const imgSizes = ['300-sm-1x', '600-sm-2x', '800-md-1x'];
+  const imgLocation = '/images/';
+  const image = document.createElement('img');
+  const picture = document.createElement('picture');
+
+  image.className = 'restaurant-img';
+  const source = document.createElement('source');
+  const mdSource = document.createElement('source');
+  imgSizes.forEach(size => {
+    let width = size.split('-')[1];
+    let density = size.split('-')[2].slice(0, 2);
+    //if the width is sm set max width, otherwise set min width
+    if (width === 'sm') {
+      source.setAttribute('media', '(max-width: 767px)');
+      if (!source.getAttribute('srcset')) {
+        source.setAttribute(
+          'srcset',
+          `${imgLocation}${imgUrl}-${size}.jpg ${density}`
+        );
+      } else {
+        //srcset exists, so append image path
+        let srcset = source.getAttribute('srcset');
+        source.setAttribute(
+          'srcset',
+          (srcset += `, ${imgLocation}${imgUrl}-${size}.jpg ${density}`)
+        );
+      }
+    } else {
+      mdSource.setAttribute('media', '(min-width:768px)');
+      mdSource.setAttribute('srcset', `${imgLocation}${imgUrl}-${size}.jpg`);
+    }
+  });
+  image.src = `${imgLocation}${imgUrl}-${imgSizes[0]}.jpg`;
+  image.alt = `${restaurant.name} in ${restaurant.neighborhood} 
+     serves ${restaurant.cuisine_type} cuisine.
+    `;
+  picture.appendChild(source);
+  picture.appendChild(mdSource);
+  picture.appendChild(image);
+
+  return picture;
 }
 
 /**
@@ -254,54 +271,3 @@ if ('navigator' in window) {
    * Service workers aren't supported, do nothing
    */
 }
-
-function openDatabase() {
-  //if the browser doesn't support serviceworkers skip opening a db
-  if (!navigator.serviceWorker) return Promise.resolve();
-
-  //otherwise return the dbPromise
-
-  return idb.open('restaurant', 1, upgradeDb => {
-    switch (upgradeDb.oldVersion) {
-      case 0:
-        const restaurantStore = upgradeDb.createObjectStore('restaurants', {
-          keyPath: 'id'
-        });
-    }
-  });
-}
-
-/**
- * Dbpromise configuration
- */
-
-const _dbPromise = openDatabase();
-
-_dbPromise
-  .then(db => {
-    if (!db) return;
-
-    DBHelper.fetchRestaurants((err, restaurants) => {
-      if (db) {
-        if (err) {
-          console.log(err);
-          return;
-        }
-        var putPromises = restaurants.map(r => {
-          let tx = db.transaction('restaurants', 'readwrite');
-          let restaurantStore = tx.objectStore('restaurants');
-
-          return restaurantStore.put(r);
-        });
-        console.log('promises', putPromises);
-        Promise.all(putPromises)
-          .then(() => {
-            console.log('putting restaurants succeeded');
-            return tx.complete;
-          })
-          .catch(() => console.log('putting restaurants failed'));
-      }
-    });
-  })
-
-  .catch(err => console.log('couldnt add restaurants to store', err));

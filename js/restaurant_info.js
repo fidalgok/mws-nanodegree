@@ -59,46 +59,10 @@ function fillRestaurantHTML(restaurant = self.restaurant) {
   const address = document.getElementById('restaurant-address');
   address.innerHTML = restaurant.address;
 
-  const picture = document
-    .getElementById('restaurant-img')
-    .querySelector('picture');
-  const image = document.createElement('img');
-  const src = DBHelper.imageUrlForRestaurant(restaurant);
-  if (Array.isArray(src)) {
-    //we have an array of photos, append them to the picture element
-    const source = document.createElement('source');
-    const mdSource = document.createElement('source');
-    src.forEach(img => {
-      //expecting image to come in as 1-widthinpx-sm|md-1x|2x.jpg
-      let width = img.split('-')[2];
-      let density = img.split('-')[3].slice(0, 2);
-      //if the width is sm set max width, otherwise set min width
-      if (width === 'sm') {
-        source.setAttribute('media', '(max-width: 767px)');
-        if (!source.getAttribute('srcset')) {
-          source.setAttribute('srcset', `${img} ${density}`);
-        } else {
-          //srcset exists, so append image path
-          let srcset = source.getAttribute('srcset');
-          source.setAttribute('srcset', (srcset += `, ${img} ${density}`));
-        }
-      } else {
-        mdSource.setAttribute('media', '(min-width:768px)');
-        mdSource.setAttribute('srcset', img);
-      }
-    });
-    image.src = src[0];
-    image.alt = `${restaurant.name} in ${restaurant.neighborhood} 
-     serves ${restaurant.cuisine_type} cuisine.
-    `;
-    picture.appendChild(source);
-    picture.appendChild(mdSource);
-    picture.appendChild(image);
-  } else {
-    image.src = src;
-  }
-  ////////////////////////////////////////////////////////
-  image.className = 'restaurant-img';
+  createResponsiveImageHtml(
+    DBHelper.imageUrlForRestaurant(restaurant),
+    restaurant
+  );
 
   const cuisine = document.getElementById('restaurant-cuisine');
   cuisine.innerHTML = restaurant.cuisine_type;
@@ -109,6 +73,59 @@ function fillRestaurantHTML(restaurant = self.restaurant) {
   }
   // fill reviews
   fillReviewsHTML();
+}
+
+/**
+ * Create responsive images
+ */
+
+function createResponsiveImageHtml(imgUrl, restaurant) {
+  //getting just the number of the image from the DB
+  //add appropriate sizes to the url and add all responsive
+  //elements to a picture tag
+  const imgSizes = ['300-sm-1x', '600-sm-2x', '800-md-1x'];
+  const imgLocation = '/images/';
+  const image = document.createElement('img');
+  const picture = document
+    .getElementById('restaurant-img')
+    .querySelector('picture');
+
+  image.className = 'restaurant-img';
+  const source = document.createElement('source');
+  const mdSource = document.createElement('source');
+  imgSizes.forEach(size => {
+    let width = size.split('-')[1];
+    let density = size.split('-')[2].slice(0, 2);
+    //if the width is sm set max width, otherwise set min width
+    if (width === 'sm') {
+      source.setAttribute('media', '(max-width: 767px)');
+      if (!source.getAttribute('srcset')) {
+        source.setAttribute(
+          'srcset',
+          `${imgLocation}${imgUrl}-${size}.jpg ${density}`
+        );
+      } else {
+        //srcset exists, so append image path
+        let srcset = source.getAttribute('srcset');
+        source.setAttribute(
+          'srcset',
+          (srcset += `, ${imgLocation}${imgUrl}-${size}.jpg ${density}`)
+        );
+      }
+    } else {
+      mdSource.setAttribute('media', '(min-width:768px)');
+      mdSource.setAttribute('srcset', `${imgLocation}${imgUrl}-${size}.jpg`);
+    }
+  });
+  image.src = `${imgLocation}${imgUrl}-${imgSizes[0]}.jpg`;
+  image.alt = `${restaurant.name} in ${restaurant.neighborhood} 
+     serves ${restaurant.cuisine_type} cuisine.
+    `;
+  picture.appendChild(source);
+  picture.appendChild(mdSource);
+  picture.appendChild(image);
+
+  return picture;
 }
 
 /**

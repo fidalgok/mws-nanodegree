@@ -1,8 +1,61 @@
 /**
- * Common database helper functions.
+ * IndexDb setup
+ *
+ */
+import idb from 'idb';
+function openDatabase() {
+  //if the browser doesn't support serviceworkers skip opening a db
+  if (!navigator.serviceWorker) return Promise.resolve();
+
+  //otherwise return the dbPromise
+
+  return idb.open('restaurant', 1, upgradeDb => {
+    switch (upgradeDb.oldVersion) {
+      case 0:
+        const restaurantStore = upgradeDb.createObjectStore('restaurants', {
+          keyPath: 'id'
+        });
+    }
+  });
+}
+
+/**
+ * Dbpromise configuration
  */
 
-// import idb from 'idb';
+const _dbPromise = openDatabase();
+
+/**
+ * get from cache first if it exists
+ */
+function serveRestaurantsFromCache(callback) {
+  return _dbPromise
+    .then(db => {
+      //no need to serve from cache if restaurants don't exist
+      if (!db) return;
+      //serve restaurants from cache
+      const tx = db.transaction('restaurants');
+      const restaurantStore = tx.objectStore('restaurants');
+
+      return restaurantStore.getAll();
+    })
+    .then(
+      restaurants => {
+        console.log('served from cache');
+        callback(null, restaurants);
+        return;
+      }, //something went wrong
+      () =>
+        callback(
+          new Error('something went wrong getting restaurants from cache'),
+          null
+        )
+    );
+}
+
+/**
+ * Common database helper functions.
+ */
 
 class DBHelper {
   /**
@@ -18,33 +71,44 @@ class DBHelper {
    * Fetch all restaurants.
    */
   static fetchRestaurants(callback) {
-    let xhr = new XMLHttpRequest();
-    xhr.open('GET', DBHelper.DATABASE_URL);
-    xhr.onload = () => {
-      if (xhr.status === 200) {
-        // Got a success response from server!
-        const json = JSON.parse(xhr.responseText);
-        const restaurants = json;
-        //add restaurants returned to the dbstore
-        // _dbPromise
-        //   .then(db => {
-        //     if (!db) return;
-        //     const tx = db.transaction('restaurants', 'readwrite');
-        //     const restaurantStore = tx.objectStore('restaurants');
-        //     restaurants.forEach(restaurant => {
-        //       restaurantStore.put(restaurant);
-        //     });
-        //     return tx.complete;
-        //   })
-        //   .then(() => console.log('restuarants added to db'));
-        callback(null, restaurants);
-      } else {
-        // Oops!. Got an error from server.
-        const error = `Request failed. Returned status of ${xhr.status}`;
-        callback(error, null);
-      }
-    };
-    xhr.send();
+    serveRestaurantsFromCache(callback).then(() => {
+      let xhr = new XMLHttpRequest();
+      xhr.open('GET', DBHelper.DATABASE_URL);
+      xhr.onload = () => {
+        if (xhr.status === 200) {
+          // Got a success response from server!
+          const json = JSON.parse(xhr.responseText);
+          const restaurants = json;
+          //add restaurants returned to the dbstore
+          //go to the network to update cache
+          _dbPromise.then(db => {
+            var putPromises = restaurants.map(r => {
+              let tx = db.transaction('restaurants', 'readwrite');
+              let restaurantStore = tx.objectStore('restaurants');
+
+              return restaurantStore.put(r);
+              //according to the idb library transaction will autoclose
+              //each time so I don't need to explicitly do so here
+              //i was getting errors saying the transaction had already closed
+              //when I tried to include it in my code.
+            });
+
+            Promise.all(putPromises)
+              .then(() => {
+                console.log('putting restaurants succeeded');
+                //callback(null, restaurants);
+                console.log('serving from xhr');
+              })
+              .catch(err => console.log('putting restaurants failed', err));
+          });
+        } else {
+          // Oops!. Got an error from server.
+          const error = `Request failed. Returned status of ${xhr.status}`;
+          callback(error, null);
+        }
+      };
+      xhr.send();
+    });
   }
 
   /**
@@ -180,12 +244,7 @@ class DBHelper {
    * Restaurant image URL.
    */
   static imageUrlForRestaurant(restaurant) {
-    //temporary code for testing an array of images
-    if ('photographs' in restaurant) {
-      return restaurant.photographs.map(photo => `/images/${photo}`);
-    } else {
-      return `/src_img/${restaurant.photograph}.jpg`;
-    }
+    return restaurant.photograph;
   }
 
   /**

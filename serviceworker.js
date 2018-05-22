@@ -1,5 +1,5 @@
 //console.log('from service worker: successfully registered');
-const cacheVersion = 'restaurant-reviews-v1-';
+const cacheVersion = 'restaurant-reviews-v2-';
 const restaurantImagesCache = 'restaurant-images';
 const urlsToCache = [
   '/',
@@ -49,11 +49,13 @@ self.addEventListener('fetch', event => {
       event.respondWith(serveImages(event.request));
       return;
     }
-    if(requestUrl.pathname.startsWith('/restaurant.html')){
-      event.respondWith(caches.match('/restaurant.html').then(response => {
-        if(response) return response;
-        return fetch(event.request).then(response => response);
-      }))
+    if (requestUrl.pathname.startsWith('/restaurant.html')) {
+      event.respondWith(
+        caches.match('/restaurant.html').then(response => {
+          if (response) return response;
+          return fetch(event.request).then(response => response);
+        })
+      );
     }
   }
   //block the fetch and respond with our cache before going to the network
@@ -69,7 +71,6 @@ self.addEventListener('fetch', event => {
           return response;
         }
         return fetch(event.request).then(response => {
-          
           return response;
         });
       })

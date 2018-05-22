@@ -43,7 +43,8 @@ function serveRestaurantsFromCache(callback) {
       restaurants => {
         console.log('served from cache');
         callback(null, restaurants);
-        return;
+
+        return restaurants;
       }, //something went wrong
       () =>
         callback(
@@ -71,43 +72,50 @@ class DBHelper {
    * Fetch all restaurants.
    */
   static fetchRestaurants(callback) {
-    serveRestaurantsFromCache(callback).then(() => {
-      let xhr = new XMLHttpRequest();
-      xhr.open('GET', DBHelper.DATABASE_URL);
-      xhr.onload = () => {
-        if (xhr.status === 200) {
-          // Got a success response from server!
-          const json = JSON.parse(xhr.responseText);
-          const restaurants = json;
-          //add restaurants returned to the dbstore
-          //go to the network to update cache
-          _dbPromise.then(db => {
-            var putPromises = restaurants.map(r => {
-              let tx = db.transaction('restaurants', 'readwrite');
-              let restaurantStore = tx.objectStore('restaurants');
+    _dbPromise.then(db => {
+      serveRestaurantsFromCache(callback).then(cachedRestaurants => {
+        let xhr = new XMLHttpRequest();
+        xhr.open('GET', DBHelper.DATABASE_URL);
+        xhr.onload = () => {
+          if (xhr.status === 200) {
+            // Got a success response from server!
+            const json = JSON.parse(xhr.responseText);
+            const restaurants = json;
+            //if going to the network for the first time
+            //serve restuarants via call back then
+            //add restaurants returned to the dbstore
+            if (cachedRestaurants.length === 0) {
+              console.log('serving from xhr');
+              callback(null, restaurants);
+            }
 
-              return restaurantStore.put(r);
-              //according to the idb library transaction will autoclose
-              //each time so I don't need to explicitly do so here
-              //i was getting errors saying the transaction had already closed
-              //when I tried to include it in my code.
+            _dbPromise.then(db => {
+              var putPromises = restaurants.map(r => {
+                let tx = db.transaction('restaurants', 'readwrite');
+                let restaurantStore = tx.objectStore('restaurants');
+
+                return restaurantStore.put(r);
+                //according to the idb library transaction will autoclose
+                //each time so I don't need to explicitly do so here
+                //i was getting errors saying the transaction had already closed
+                //when I tried to include it in my code.
+              });
+
+              Promise.all(putPromises)
+                .then(() => {
+                  console.log('putting restaurants succeeded');
+                  //callback(null, restaurants);
+                })
+                .catch(err => console.log('putting restaurants failed', err));
             });
-
-            Promise.all(putPromises)
-              .then(() => {
-                console.log('putting restaurants succeeded');
-                //callback(null, restaurants);
-                console.log('serving from xhr');
-              })
-              .catch(err => console.log('putting restaurants failed', err));
-          });
-        } else {
-          // Oops!. Got an error from server.
-          const error = `Request failed. Returned status of ${xhr.status}`;
-          callback(error, null);
-        }
-      };
-      xhr.send();
+          } else {
+            // Oops!. Got an error from server.
+            const error = `Request failed. Returned status of ${xhr.status}`;
+            callback(error, null);
+          }
+        };
+        xhr.send();
+      });
     });
   }
 
